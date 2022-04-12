@@ -139,16 +139,21 @@ void Client::read()
     in >> list;
     qDebug() << list;
 
-
-    QString l = list[0];
-    QUrl url = QUrl::fromUserInput( l);
     QFile* destinationFile= new QFile(QStringLiteral("imageFile.jpg"));
     Q_ASSUME(destinationFile->open(QFile::WriteOnly));
+   for(int i = 0; i < list.size();++i)
+   {
+    QString l = list[i];
+    QUrl url = QUrl::fromUserInput( l);
+
+
+
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
     QNetworkReply* reply = manager->get(QNetworkRequest(url));
     connect(reply,&QNetworkReply::readyRead,destinationFile,[destinationFile,reply](){destinationFile->write(reply->readAll());});
     connect(reply,&QNetworkReply::finished,destinationFile,&QFile::deleteLater);
     connect(reply,&QNetworkReply::finished,reply,&QNetworkReply::deleteLater);
+   }
 
 }
 
