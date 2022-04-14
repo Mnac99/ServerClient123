@@ -25,8 +25,8 @@ private:
 
     QLabel *statusLabel = nullptr;
     QTcpServer * tcpServer = nullptr;
-    QList<QString> list;
-    QStringList l;
+    QStringList urlSaver;
+    QStringList lUrl;
 
 
 };

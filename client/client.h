@@ -5,6 +5,7 @@
 #include <QDataStream>
 #include <QDialog>
 #include <QTcpSocket>
+#include <QtNetwork>
 QT_BEGIN_NAMESPACE
 class QComboBox;
 class QLabel;
@@ -23,21 +24,24 @@ public:
 private slots:
     void requestNew();
     void read();
+    void fileHandler();
 
     void displayError(QAbstractSocket::SocketError socketError);
     void enableGetButton();
 
-private:
 
-    QComboBox *hostCombo = nullptr;
-    QLineEdit *portLineEdit = nullptr;
-    QLabel *statusLabel = nullptr;
-    QPushButton *getButton = nullptr;
+private:
+     QNetworkAccessManager* manager;
+
+    QComboBox *hostCombo ;
+    QLineEdit *portLineEdit;
+    QLabel *statusLabel ;
+    QPushButton *getButton ;
 
 
     QTcpSocket *tcpSocket = nullptr;
     QDataStream in;
-    QString currentFortune;
+
     QStringList list;
 };
 

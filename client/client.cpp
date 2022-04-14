@@ -1,13 +1,14 @@
 #include "client.h"
 #include <QtWidgets>
-#include <QtNetwork>
+#include <QDateTime>
 #include <QDebug>
+
 
 Client::Client(QWidget *parent)
     : QDialog(parent)
-    ,hostCombo (new QComboBox)
-    ,portLineEdit(new QLineEdit)
-    ,getButton(new QPushButton(tr("Get ")))
+    , hostCombo (new QComboBox)
+    , portLineEdit(new QLineEdit)
+    , getButton(new QPushButton(tr("Get ")))
     , tcpSocket(new QTcpSocket(this))
 {
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
@@ -34,11 +35,6 @@ Client::Client(QWidget *parent)
         if (!ipAddressesList.at(i).isLoopback())
             hostCombo->addItem(ipAddressesList.at(i).toString());
     }
-    for (int i = 0; i < ipAddressesList.size(); ++i)
-    {
-        if (!ipAddressesList.at(i).isLoopback())
-            hostCombo->addItem(ipAddressesList.at(i).toString());
-    }
 
     portLineEdit->setValidator(new QIntValidator(1, 65535, this));
 
@@ -57,7 +53,6 @@ Client::Client(QWidget *parent)
     buttonBox->addButton(getButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
     in.setDevice(tcpSocket);
-    in.setVersion(QDataStream::Qt_4_0);
     connect(hostCombo, &QComboBox::editTextChanged,
             this, &Client::enableGetButton);
     connect(portLineEdit, &QLineEdit::textChanged,
@@ -119,7 +114,7 @@ void Client::displayError(QAbstractSocket::SocketError socketError)
     case QAbstractSocket::ConnectionRefusedError:
         QMessageBox::information(this, tr(" Client"),
                                  tr("The connection was refused by the peer. "
-                                    "Make sure the fortune server is running, "
+                                    "Make sure the  server is running, "
                                     "and check that the host name and port "
                                     "settings are correct."));
         break;
@@ -131,37 +126,66 @@ void Client::displayError(QAbstractSocket::SocketError socketError)
 
     getButton->setEnabled(true);
 }
+
 void Client::read()
 {
-    in.startTransaction();
-
-
     in >> list;
-    qDebug() << list;
 
-    QFile* destinationFile= new QFile(QStringLiteral("imageFile.jpg"));
-    Q_ASSUME(destinationFile->open(QFile::WriteOnly));
-   for(int i = 0; i < list.size();++i)
-   {
-    QString l = list[i];
-    QUrl url = QUrl::fromUserInput( l);
+    manager = new QNetworkAccessManager(this);
 
 
+    for(int i = 0; i < list.size(); ++i)
+    {
 
-    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
-    QNetworkReply* reply = manager->get(QNetworkRequest(url));
-    connect(reply,&QNetworkReply::readyRead,destinationFile,[destinationFile,reply](){destinationFile->write(reply->readAll());});
-    connect(reply,&QNetworkReply::finished,destinationFile,&QFile::deleteLater);
-    connect(reply,&QNetworkReply::finished,reply,&QNetworkReply::deleteLater);
-   }
+        QString l = list[i];
+        QUrl url = QUrl::fromUserInput( l);
+        QNetworkReply *reply = manager->get(QNetworkRequest(url));
+
+        in.startTransaction();
+
+        connect(reply,&QNetworkReply::finished,this,&Client::fileHandler);
+
+
+    }
 
 }
+
+
+
+
+
+
+void Client::fileHandler()
+{
+    auto reply = dynamic_cast<QNetworkReply*>(sender());
+    if(!reply)
+    {
+        return;
+    }
+
+    QString name = QString("imageFiles_%1.png").arg(QDateTime::currentMSecsSinceEpoch());
+
+    QFile destinationFile(name);
+
+    if(destinationFile.open(QFile::WriteOnly))
+    {
+
+        auto data = reply->readAll();
+        destinationFile.write(data);
+
+    }
+
+
+    reply->deleteLater();
+
+}
+
+
 
 void Client::enableGetButton()
 {
     getButton->setEnabled(!hostCombo->currentText().isEmpty() &&
                           !portLineEdit->text().isEmpty());
-
 }
 
 

@@ -7,7 +7,7 @@
 #include <QTextStream>
 #include <QStringList>
 #include <QObject>
-#include <QDebug>
+
 
 
 
@@ -18,7 +18,7 @@ Server::Server(QWidget *parent)
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint );
     statusLabel-> setTextInteractionFlags(Qt::TextBrowserInteraction);
     initServer();
-    list << filereader();
+    urlSaver = filereader();
     auto quitButton = new QPushButton(tr("Quit"));
     quitButton-> setAutoDefault(false);
     connect(quitButton,&QAbstractButton::clicked,this,&QWidget::close);
@@ -85,10 +85,8 @@ void Server::send()
 
     QByteArray block ;
     QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_10);
 
-    out << list;
-    qDebug() << block << block.size();
+    out <<urlSaver;
 
     QTcpSocket *clientConnection = tcpServer->nextPendingConnection();
     connect(clientConnection, &QAbstractSocket::disconnected,
@@ -101,17 +99,17 @@ void Server::send()
 QStringList Server::filereader()
 {
 
-    QFile myFile ("C:\\Users\\user\\Desktop\\Urlfile.txt");
+    QFile urlFile ("C:\\Users\\user\\Desktop\\Urlfile.txt");
 
 
-    if(!myFile.open(QIODevice::OpenModeFlag::ReadOnly))
+    if(!urlFile.open(QIODevice::OpenModeFlag::ReadOnly))
     {
         qCritical() << "can not open file";
-        qCritical() << myFile.errorString();
+        qCritical() << urlFile.errorString();
 
 
     }
-    QTextStream stream(& myFile);
+    QTextStream stream(& urlFile);
 
 
     while(!stream.atEnd())
@@ -120,13 +118,11 @@ QStringList Server::filereader()
         QString line = stream.readLine();
 
 
-        l.push_back(line);
+        lUrl.push_back(line);
 
     }
-
-
-
-    return l;
+    urlFile.close();
+    return lUrl;
 }
 
 
