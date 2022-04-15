@@ -6,13 +6,11 @@
 #include <QDialog>
 #include <QTcpSocket>
 #include <QtNetwork>
-QT_BEGIN_NAMESPACE
 class QComboBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
 class QTcpSocket;
-QT_END_NAMESPACE
 
 class Client : public QDialog
 {
@@ -20,6 +18,7 @@ class Client : public QDialog
 
 public:
     explicit  Client(QWidget *parent = nullptr);
+    ~Client();
 
 private slots:
     void requestNew();
@@ -30,25 +29,24 @@ private slots:
     void displayError(QAbstractSocket::SocketError socketError);
     void enableGetButton();
 
+private:
+    void deleteImages();
+
 
 private:
-     QNetworkAccessManager* manager;
+
 
     QComboBox *hostCombo ;
     QLineEdit *portLineEdit;
     QLabel *statusLabel ;
     QPushButton *getButton ;
     QPushButton *showButton;
-
-
-    QTcpSocket *tcpSocket = nullptr;
     QDataStream in;
-
-    QStringList list;
     QStringList imagelist;
-    QString name;
     QLabel * label_img;
-     int counter ;
+    int counter ;
+    QNetworkAccessManager* manager;
+    QTcpSocket *tcpSocket;
 };
 
 

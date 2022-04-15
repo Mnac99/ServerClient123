@@ -2,16 +2,18 @@
 #include <QtWidgets>
 #include <QDateTime>
 #include <QDebug>
+#include <QTcpSocket>
 
 
 Client::Client(QWidget *parent)
     : QDialog(parent)
     , hostCombo (new QComboBox)
     , portLineEdit(new QLineEdit)
-    , getButton(new QPushButton(tr("get ")))
+    , getButton(new QPushButton(tr("get")))
     , showButton(new QPushButton(tr("show")))
     , label_img (new QLabel (this))
     , counter(0)
+    , manager(new QNetworkAccessManager(this))
     , tcpSocket(new QTcpSocket(this))
 
 
@@ -48,8 +50,8 @@ Client::Client(QWidget *parent)
     auto portLabel = new QLabel(tr("&Server port:"));
     portLabel->setBuddy(portLineEdit);
 
-    statusLabel = new QLabel(tr("This examples requires that you run the "
-                                " Server example as well."));
+    statusLabel = new QLabel(tr("This Client project requires that you run the "
+                                " Server project as well."));
     getButton->setDefault(false);
     getButton->setEnabled(true);
     auto quitButton = new QPushButton(tr("Quit"));
@@ -107,6 +109,7 @@ void Client::requestNew()
 
     tcpSocket->connectToHost(hostCombo->currentText(),
                              portLineEdit->text().toInt());
+    deleteImages();
 }
 
 void Client::displayError(QAbstractSocket::SocketError socketError)
@@ -137,31 +140,19 @@ void Client::displayError(QAbstractSocket::SocketError socketError)
 
 void Client::read()
 {
-    in >> list;
-
-    manager = new QNetworkAccessManager(this);
-
-
-    for(int i = 0; i < list.size(); ++i)
+     QStringList Urldata;
+    in >> Urldata;
+    for(int i = 0; i <  Urldata.size(); ++i)
     {
-
-        QString l = list[i];
-        QUrl url = QUrl::fromUserInput( l);
+        QUrl url = QUrl::fromUserInput( Urldata[i]);
         QNetworkReply *reply = manager->get(QNetworkRequest(url));
 
         in.startTransaction();
 
-        connect(reply,&QNetworkReply::finished,this,&Client::fileHandler);
-
-
+        connect(reply, &QNetworkReply::finished, this, &Client::fileHandler);
     }
 
 }
-
-
-
-
-
 
 void Client::fileHandler()
 {
@@ -171,7 +162,7 @@ void Client::fileHandler()
         return;
     }
 
-    name = QString("imageFiles_%1.png").arg(QDateTime::currentMSecsSinceEpoch());
+    QString name = QString("imageFiles_%1.png").arg(QDateTime::currentMSecsSinceEpoch());
     imagelist.push_back(name);
 
     QFile destinationFile(name);
@@ -189,8 +180,6 @@ void Client::fileHandler()
 
 }
 
-
-
 void Client::enableGetButton()
 {
     getButton->setEnabled(!hostCombo->currentText().isEmpty() &&
@@ -198,21 +187,44 @@ void Client::enableGetButton()
 }
 void Client::on_pushButton_clicked()
 {
-    if(counter < imagelist.size())
+    if(imagelist.isEmpty())
+        return;
+
+    if(counter >= imagelist.size())
     {
-        QString name = imagelist[counter];
+        counter = 0;
+    }
 
-        qDebug()<< name;
+    QString name = imagelist[counter];
 
-        label_img->setWindowFlags(Qt::Window);
-        QPixmap pm(name); // <- path to image file
-        label_img->setPixmap(pm);
-        counter++;
-        label_img->setScaledContents(true);
+    qDebug()<< name;
+
+    label_img->setWindowFlags(Qt::Window);
+    QPixmap pm(name); // <- path to image file
+    label_img->setPixmap(pm);
+    counter++;
+    label_img->setScaledContents(true);
+    if (!label_img->isVisible()) {
         label_img->show();
     }
-    else
-        counter = 0;
+}
+
+void Client::deleteImages()
+{
+    for(int i = 0; i <imagelist.size(); ++i)
+    {
+        QFile file(imagelist[i]);
+        file.remove();
+    }
+     imagelist.clear();
+}
+
+Client::~Client()
+{
+
+   deleteImages();
+
+
 }
 
 

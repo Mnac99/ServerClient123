@@ -99,7 +99,7 @@ void Server::send()
 QStringList Server::filereader()
 {
 
-    QFile urlFile ("C:\\Users\\user\\Desktop\\Urlfile.txt");
+    QFile urlFile ("Urlfile.txt");
 
 
     if(!urlFile.open(QIODevice::OpenModeFlag::ReadOnly))
