@@ -25,6 +25,7 @@ private slots:
     void requestNew();
     void read();
     void fileHandler();
+    void on_pushButton_clicked();
 
     void displayError(QAbstractSocket::SocketError socketError);
     void enableGetButton();
@@ -37,12 +38,17 @@ private:
     QLineEdit *portLineEdit;
     QLabel *statusLabel ;
     QPushButton *getButton ;
+    QPushButton *showButton;
 
 
     QTcpSocket *tcpSocket = nullptr;
     QDataStream in;
 
     QStringList list;
+    QStringList imagelist;
+    QString name;
+    QLabel * label_img;
+     int counter ;
 };
 
 

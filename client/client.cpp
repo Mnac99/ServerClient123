@@ -8,8 +8,13 @@ Client::Client(QWidget *parent)
     : QDialog(parent)
     , hostCombo (new QComboBox)
     , portLineEdit(new QLineEdit)
-    , getButton(new QPushButton(tr("Get ")))
+    , getButton(new QPushButton(tr("get ")))
+    , showButton(new QPushButton(tr("show")))
+    , label_img (new QLabel (this))
+    , counter(0)
     , tcpSocket(new QTcpSocket(this))
+
+
 {
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     hostCombo->setEditable(true);
@@ -51,6 +56,7 @@ Client::Client(QWidget *parent)
 
     auto buttonBox = new QDialogButtonBox;
     buttonBox->addButton(getButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(showButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
     in.setDevice(tcpSocket);
     connect(hostCombo, &QComboBox::editTextChanged,
@@ -62,6 +68,8 @@ Client::Client(QWidget *parent)
     connect(quitButton, &QAbstractButton::clicked, this, &QWidget::close);
     connect(tcpSocket, &QIODevice::readyRead, this, &Client::read);
     connect(tcpSocket, &QAbstractSocket::errorOccurred, this, &Client::displayError);
+    connect(showButton, &QAbstractButton::clicked,
+            this, &Client::on_pushButton_clicked);
 
 
     QGridLayout *mainLayout = nullptr;
@@ -163,7 +171,8 @@ void Client::fileHandler()
         return;
     }
 
-    QString name = QString("imageFiles_%1.png").arg(QDateTime::currentMSecsSinceEpoch());
+    name = QString("imageFiles_%1.png").arg(QDateTime::currentMSecsSinceEpoch());
+    imagelist.push_back(name);
 
     QFile destinationFile(name);
 
@@ -187,6 +196,23 @@ void Client::enableGetButton()
     getButton->setEnabled(!hostCombo->currentText().isEmpty() &&
                           !portLineEdit->text().isEmpty());
 }
+void Client::on_pushButton_clicked()
+{
+    if(counter < imagelist.size())
+    {
+        QString name = imagelist[counter];
 
+        qDebug()<< name;
+
+        label_img->setWindowFlags(Qt::Window);
+        QPixmap pm(name); // <- path to image file
+        label_img->setPixmap(pm);
+        counter++;
+        label_img->setScaledContents(true);
+        label_img->show();
+    }
+    else
+        counter = 0;
+}
 
 
